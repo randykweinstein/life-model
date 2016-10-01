@@ -3,6 +3,7 @@ package com.calculr.lifemodel.engine;
 import java.time.Duration;
 import java.time.LocalDate;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -17,5 +18,7 @@ public class EventQueueTest {
   public void createEventQueueShouldDefineDataStructures() {
     EventQueue queue = new EventQueue(DATE1, Duration.ofDays(30));
     System.out.println(queue);
+    Assert.assertEquals(1L, 1L);
+    Assert.assertEquals(1L, 2L);
   }
 }
