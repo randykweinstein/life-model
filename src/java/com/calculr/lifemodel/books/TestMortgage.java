@@ -22,14 +22,16 @@ public class TestMortgage {
     private final double mortgageRate;
     private final Money closingCosts;
     private final Money extraMonthlyPayment;
+    private final int years;
     
     MortgageSimulation(String trial, Money totalPrice, double mortgageRate, Money closingCosts,
-        Money extraMonthlyPayment) {
+        Money extraMonthlyPayment, int years) {
       this.trial = trial;
       this.totalPrice = totalPrice;
       this.mortgageRate = mortgageRate;
       this.closingCosts = closingCosts;
       this.extraMonthlyPayment = extraMonthlyPayment;
+      this.years = years;
     }
     
     @Override
@@ -79,7 +81,7 @@ public class TestMortgage {
           .setRate(mortgageRate)
           .setDownPayment(0.2, checking)  // 20% down
           .setClosingCosts(closingCosts)
-          .setFixed(30)  // years
+          .setFixed(years)  // years
           .build();
       
       MoneyMetric maxChecking = MoneyMetric.max("Checking max balance");
@@ -100,13 +102,20 @@ public class TestMortgage {
   
   public static void main(String[] args) {
     Experiment experiment = Experiment.create(
-        new MortgageSimulation("Rate 3.625% (with closing costs)", Money.dollars(1_000_000),
-            0.03625, Money.dollars(20_000), Money.zero()),
-        new MortgageSimulation("Rate 3.625% (with no closing costs)", Money.dollars(1_020_000),
-            0.03625, Money.zero(), Money.zero()),
-        new MortgageSimulation("Rate 3.625% (with closing costs and extra payment)",
-            Money.dollars(1_000_000), 0.03625, Money.dollars(20_000),
-            Money.dollars(3731.37 - 3648.41)));
+//        new MortgageSimulation("Rate 3.625% (with closing costs)", Money.dollars(1_000_000),
+//            0.03625, Money.dollars(20_000), Money.zero(), 30),
+//        new MortgageSimulation("Rate 3.625% (with no closing costs)", Money.dollars(1_020_000),
+//            0.03625, Money.zero(), Money.zero(), 30),
+        new MortgageSimulation("Rate 3.5% (with closing costs, 3.5%, 1M, 20 years)",
+            Money.dollars(1_000_000), 0.035, Money.dollars(20_000),
+            Money.zero(), 20),
+        
+        new MortgageSimulation("Rate 3.5% (with closing costs, 3.5%, 1M, 30 years)",
+            Money.dollars(1_000_000), 0.035, Money.dollars(20_000),
+            Money.dollars(0), 30),
+    new MortgageSimulation("Rate 3.625% (with closing costs, 3.625%, 1M, 30 years)",
+        Money.dollars(1_000_000), 0.03625, Money.dollars(20_000),
+        Money.dollars(991.26), 30));
     experiment.run(LocalDate.now());
   }
 }
