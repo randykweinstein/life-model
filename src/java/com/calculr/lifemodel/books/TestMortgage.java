@@ -23,7 +23,8 @@ public class TestMortgage {
     private final Money closingCosts;
     private final Money extraMonthlyPayment;
     
-    MortgageSimulation(String trial, Money totalPrice, double mortgageRate, Money closingCosts, Money extraMonthlyPayment) {
+    MortgageSimulation(String trial, Money totalPrice, double mortgageRate, Money closingCosts,
+        Money extraMonthlyPayment) {
       this.trial = trial;
       this.totalPrice = totalPrice;
       this.mortgageRate = mortgageRate;
