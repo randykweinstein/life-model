@@ -1,0 +1,49 @@
+syntax = "proto2";
+
+// An account is a message that describes a single financial instrument that has a ledger of
+// transactions.
+message Account {
+  // The name of the account.
+  required string name = 1;
+
+  // An enumerated list of all possible account types.
+  enum Type {
+  	UNKNOWN = 0;
+
+  	CASH = 1;
+  	CHECKING = 2;
+  	SAVINGS = 3;
+  	CREDIT_CARD = 4;
+  	LOAN = 5;
+    DURABLE_ASSET = 6;
+  }
+  optional Type type = 2;
+
+  // The dates when the account was first opened and optionally closed.  Dates are in days since
+  // epoch.
+  optional int32 open_date = 3;
+  optional int32 close_date = 4;
+
+  // Repeated lists of all withdrawal and deposit transactions.
+  repeated Transaction deposits = 5;
+  repeated Transaction withdrawas = 6;
+}
+
+// A transaction is a single financial transfer from one account to another account.
+message Transaction {
+  // A unique identifier for each transaction.
+  required int64 id = 1;
+
+  optional int32 date = 2;
+  optional string description = 3;
+  optional Money amount = 4;
+}
+
+message Money {
+  enum Currency {
+  	USD = 0;
+  }
+  optional Currency currency = 1;
+  optional int32 units = 2;
+  optional double fractional = 3;
+}
