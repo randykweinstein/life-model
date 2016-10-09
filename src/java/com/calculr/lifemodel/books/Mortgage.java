@@ -102,6 +102,8 @@ public class Mortgage implements Payee {
     private Payer payer;
     private int years = 0;
     private double rate = 0.04;
+    private double originationRateDifference = 0;
+    private Money originationFee = Money.zero();
 
     MortgageBuilder(Simulation sim, BalanceSheet sheet, Payer payer, String name, Money salePrice) {
       this.sim = sim;
@@ -141,6 +143,12 @@ public class Mortgage implements Payee {
       return this;
     }
     
+    public MortgageBuilder setOriginationRate(Money fee, double newRate) {
+      this.originationFee = fee;
+      this.originationRateDifference = newRate - rate;
+      return this;
+    }
+    
     public Mortgage build() {
       AssetAccount asset = sheet.createAssetAccount(name + " Asset");
       Transaction mortgatgeAsset = Transaction.create(closingDate,
@@ -149,7 +157,7 @@ public class Mortgage implements Payee {
       
       LiabilityAccount loan = sheet.createLiabilityAccount(name + " Loan");
       loan.schedule(closingDate, date -> loan.purchase(mortgatgeAsset));
-      loan.actOn(new Interest(rate));
+      loan.actOn(new Interest(rate + originationRateDifference));
       
       VirtualAccount equity = sheet.createVirtualAccount(name + " Equity", asset, loan);
       MoneyMetric totalPayment = MoneyMetric.sum("Mortgage <" + name + "> total payment");
@@ -174,8 +182,18 @@ public class Mortgage implements Payee {
               context.updateMetric(totalPayment, closingCosts);
             });
       }
-
-      Money paymentAmount = amortizationPayment(salePrice.add(downPayment.negate()), years, rate); 
+      if (originationFee.sign() > 0) {
+        Transaction transaction = Transaction.create(closingDate,
+            "Mortgage <" + name + "> Origination Fee", originationFee);
+        downPaymentAccount.schedule(closingDate,
+            context -> {
+              downPaymentAccount.withdraw(transaction);
+              downPaymentAccount.makePayment(transaction, loan);
+              context.updateMetric(totalPayment, originationFee);
+            });        
+      }
+      
+      Money paymentAmount = amortizationPayment(salePrice.add(downPayment.negate()), years, rate + originationRateDifference); 
       MoneyMetric monthlyPayment = MoneyMetric.first("Mortgage <" + name + "> monthly payment");
       sim.update(monthlyPayment, paymentAmount);
       Mortgage mortgage = new Mortgage(sim, name, asset, loan, equity, paymentAmount, totalPayment);

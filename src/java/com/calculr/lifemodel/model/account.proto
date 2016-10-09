@@ -39,6 +39,7 @@ message Transaction {
   optional Money amount = 4;
 }
 
+// Money is the basic unit of amounts in the simulator.
 message Money {
   enum Currency {
   	USD = 0;

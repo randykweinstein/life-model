@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -29,10 +30,11 @@ public class Experiment {
    *          stop according to its needs.
    */
   public void run(LocalDate start) {
-    Map<String, Collection<Metric<?>>> trialMetrics = new TreeMap<>();
+    Map<String, Collection<Metric<?>>> trialMetrics = new LinkedHashMap<>();
     Set<String> metricNames = new HashSet<>();
     for (Trial trial : trials) {
       Simulation sim = Simulator.create(start);
+      System.out.println("Running Trial <" + trial.getTrialName() + ">");
       trial.run(start, sim);
       Collection<Metric<?>> metrics = sim.getMetrics();
       for (Metric<?> metric : metrics) {
@@ -42,7 +44,7 @@ public class Experiment {
     }
     
     for (Entry<String, Collection<Metric<?>>> entry : trialMetrics.entrySet()) {
-      System.out.println("Trial <" + entry.getKey() + ">");
+      System.out.println("\nTrial <" + entry.getKey() + ">");
       for (Metric<?> metric : entry.getValue()) {
         System.out.println("  " + metric);
       }

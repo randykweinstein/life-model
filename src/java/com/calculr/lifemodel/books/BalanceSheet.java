@@ -106,6 +106,23 @@ public final class BalanceSheet extends Actor<BalanceSheet> {
   }
   
   /**
+   * A dummy account is an account that does accepts all deposits and
+   * withdrawals without updating the {@link Journal}.
+   */
+  public AssetAccount createDummyAccount() {
+    return new AssetAccount(sim, "Dummy") {
+      @Override
+      public void deposit(Transaction transaction) {
+        return;
+      }
+      @Override
+      public void withdraw(Transaction transaction) {
+        return;
+      }
+    };
+  }
+  
+  /**
    * Constructs a new {@link Account} that provides a month interest payment.
    */
   public AssetAccount createInterestAccount(String accountName, double interestRate) {

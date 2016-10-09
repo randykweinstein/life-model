@@ -24,7 +24,7 @@ public abstract class Metric<T> {
   /**
    * Returns the value stored in the metric.
    */
-  protected abstract T getValue();
+  public abstract T getValue();
   
   @Override
   public String toString() {

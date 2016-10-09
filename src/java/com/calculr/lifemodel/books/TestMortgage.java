@@ -1,5 +1,6 @@
 package com.calculr.lifemodel.books;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 
@@ -19,19 +20,73 @@ public class TestMortgage {
   static class MortgageSimulation implements Trial {
     private final String trial;
     private final Money totalPrice;
+    private final double fractionDown;
     private final double mortgageRate;
     private final Money closingCosts;
     private final Money extraMonthlyPayment;
     private final int years;
+    private final Money originationFee;
+    private final double originationRateDifference;
     
-    MortgageSimulation(String trial, Money totalPrice, double mortgageRate, Money closingCosts,
-        Money extraMonthlyPayment, int years) {
-      this.trial = trial;
-      this.totalPrice = totalPrice;
-      this.mortgageRate = mortgageRate;
-      this.closingCosts = closingCosts;
-      this.extraMonthlyPayment = extraMonthlyPayment;
-      this.years = years;
+    private MortgageSimulation(MortgageSimulationBuilder builder) {
+      this.trial = builder.trial;
+      this.totalPrice = builder.totalPrice;
+      this.fractionDown = builder.fractionDown;
+      this.mortgageRate = builder.mortgageRate;
+      this.closingCosts = builder.closingCosts;
+      this.extraMonthlyPayment = builder.extraPayment;
+      this.years = builder.years;
+      this.originationFee = builder.originationFee;
+      this.originationRateDifference = builder.originationRateDifference;
+    }
+    
+    static MortgageSimulationBuilder newBuilder(String trial, Money totalPrice, double mortgageRate,
+        int years) {
+      return new MortgageSimulationBuilder(trial, totalPrice, mortgageRate, years);
+    }
+    
+    static class MortgageSimulationBuilder {
+      private final String trial;
+      private final Money totalPrice;
+      private final double mortgageRate;
+      private final int years;
+      private double fractionDown = 0.20;
+      private Money closingCosts = Money.zero();
+      private Money extraPayment = Money.zero();
+      private Money originationFee = Money.zero();
+      private double originationRateDifference = 0; 
+      
+      MortgageSimulationBuilder(String trial, Money totalPrice, double mortgageRate, int years) {
+        this.trial = trial;
+        this.totalPrice = totalPrice;
+        this.mortgageRate = mortgageRate;
+        this.years = years;
+      }
+      
+      public MortgageSimulationBuilder setDownPaymentFraction(double fraction) {
+        this.fractionDown = fraction;
+        return this;
+      }
+      
+      public MortgageSimulationBuilder setClosingCosts(Money costs) {
+        this.closingCosts = costs;
+        return this;
+      }
+      
+      public MortgageSimulationBuilder setExtraPayment(Money payment) {
+        this.extraPayment = payment;
+        return this;
+      }
+      
+      public MortgageSimulationBuilder setOrigination(Money fee, double newRate) {
+        this.originationFee = fee;
+        this.originationRateDifference = newRate - mortgageRate;
+        return this;
+      }
+      
+      public MortgageSimulation build() {
+        return new MortgageSimulation(this);
+      }
     }
     
     @Override
@@ -44,7 +99,7 @@ public class TestMortgage {
       BalanceSheet sheet = BalanceSheet.create(sim);
       AssetAccount checking = sheet.createAssetAccount("Checking");
       checking.schedule(start.plusDays(15), context -> checking
-          .deposit(Transaction.create(start.plusDays(15), "Transfer", Money.dollars(220000))));
+          .deposit(Transaction.create(start.plusDays(15), "Transfer", Money.dollars(250000))));
       checking.onSchedule()
           .startingToday()
           .runEveryNWeeks(2)
@@ -76,20 +131,41 @@ public class TestMortgage {
       credit.onSchedule().startingToday().runDaily().schedule(context -> credit.purchase(
           Transaction.create(context.getDate(), "credit card purchase", Money.dollars(250))));
       
+      LocalDate closingDate = LocalDate.of(2016, 11, 16);
       Mortgage mortgage = sheet.createMortgage(extraPayer, "Home", totalPrice)
-          .setClosingDate(LocalDate.now().plusDays(60))
+          .setClosingDate(closingDate)
           .setRate(mortgageRate)
-          .setDownPayment(0.2, checking)  // 20% down
+          .setDownPayment(fractionDown, checking)  // 20% down
+          .setClosingCosts(closingCosts)
+          .setOriginationRate(originationFee, mortgageRate + originationRateDifference)
+          .setFixed(years)  // years
+          .build();      
+      
+      AssetAccount dummy = sheet.createDummyAccount();
+      Payer dummyPayer = new BlindPayer(sim, dummy);
+      Mortgage comparisonMortgage = sheet.createMortgage(dummyPayer, "ComparisonHome", totalPrice)
+          .setClosingDate(closingDate)
+          .setRate(mortgageRate)
+          .setDownPayment(fractionDown, dummy)  // 20% down
           .setClosingCosts(closingCosts)
           .setFixed(years)  // years
           .build();
-      
+      mortgage.getAsset().onSchedule().starting(closingDate).runEveryNMonths(60).schedule(context -> {
+         Money payment = context.<Money>getMetric("Mortgage <Home> total payment").getValue();
+         Money comparison = context.<Money>getMetric("Mortgage <ComparisonHome> total payment").getValue();
+            System.out.format(
+                "After %s years, total payment %s vs %s (no origination fee) with a difference of %s\n",
+                between(closingDate, context.getDate()).getSeconds() / (3600 * 24 * 365), payment,
+                comparison, payment.add(comparison.negate()));
+          });
       MoneyMetric maxChecking = MoneyMetric.max("Checking max balance");
+      MoneyMetric downPayment = MoneyMetric.max("Mortgage <Home> downpayment");
+      sim.update(downPayment, totalPrice.scale(fractionDown));
       checking.onSchedule()
           .startingIn(100)
           .runDaily()
           .schedule(context -> context.updateMetric(maxChecking, checking.getPostedBalance()));
-
+      
       //sheet.onSchedule().startingToday().runEveryNMonths(12).stopAfter(3)
       //    .schedule(date -> System.out.println("\n" + date + "\n" + sheet));
       //sheet.onSchedule().startingToday().runMonthly().stopAfter(12 * 30)
@@ -97,25 +173,27 @@ public class TestMortgage {
       //        context.getDate(), mortgage.getLoanToValue(), mortgage.getAsset().getPostedBalance(),
       //        mortgage.getLoan().getPostedBalance()));
       sim.runUntil(start.plusYears(35));
-    }  
+    }
+  }
+  
+  private static Duration between(LocalDate date1, LocalDate date2) {
+    return Duration.between(date1.atTime(12, 0), date2.atTime(12, 0));
   }
   
   public static void main(String[] args) {
     Experiment experiment = Experiment.create(
-//        new MortgageSimulation("Rate 3.625% (with closing costs)", Money.dollars(1_000_000),
-//            0.03625, Money.dollars(20_000), Money.zero(), 30),
-//        new MortgageSimulation("Rate 3.625% (with no closing costs)", Money.dollars(1_020_000),
-//            0.03625, Money.zero(), Money.zero(), 30),
-        new MortgageSimulation("Rate 3.5% (with closing costs, 3.5%, 1M, 20 years)",
-            Money.dollars(1_000_000), 0.035, Money.dollars(20_000),
-            Money.zero(), 20),
-        
-        new MortgageSimulation("Rate 3.5% (with closing costs, 3.5%, 1M, 30 years)",
-            Money.dollars(1_000_000), 0.035, Money.dollars(20_000),
-            Money.dollars(0), 30),
-    new MortgageSimulation("Rate 3.625% (with closing costs, 3.625%, 1M, 30 years)",
-        Money.dollars(1_000_000), 0.03625, Money.dollars(20_000),
-        Money.dollars(991.26), 30));
-    experiment.run(LocalDate.now());
+        MortgageSimulation.newBuilder("Rate 3.625%, no points", Money.dollars(1_010_000), 0.03625, 30)
+            .setClosingCosts(Money.dollars(20_000))
+            .build(),
+        MortgageSimulation.newBuilder("Rate 3.625%, 0.125 points @ 0.5% fee", Money.dollars(1_010_000), 0.03625, 30)
+            .setClosingCosts(Money.dollars(20_000))
+            .setOrigination(Money.dollars(4040), 0.035)            
+            .build(),          
+        MortgageSimulation.newBuilder("Rate 3.625%, 0.25 points @ 1% fee", Money.dollars(1_010_000), 0.03625, 30)
+            .setClosingCosts(Money.dollars(20_000))
+            .setOrigination(Money.dollars(8080), 0.03375)            
+            .build()          
+        );
+    experiment.run(LocalDate.of(2016, 10, 1));
   }
 }

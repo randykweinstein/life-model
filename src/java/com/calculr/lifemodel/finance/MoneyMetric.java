@@ -23,7 +23,7 @@ public abstract class MoneyMetric extends Metric<Money> {
       }
 
       @Override
-      protected Money getValue() {
+      public Money getValue() {
         return aggregate;
       }      
     };
@@ -39,7 +39,7 @@ public abstract class MoneyMetric extends Metric<Money> {
       }
 
       @Override
-      protected Money getValue() {
+      public Money getValue() {
         return aggregate;
       }      
     };
@@ -55,7 +55,7 @@ public abstract class MoneyMetric extends Metric<Money> {
       }
 
       @Override
-      protected Money getValue() {
+      public Money getValue() {
         return aggregate;
       }      
     };
@@ -73,7 +73,7 @@ public abstract class MoneyMetric extends Metric<Money> {
       }
 
       @Override
-      protected Money getValue() {
+      public Money getValue() {
         return aggregate.scale(1.0/count);
       }      
     };
@@ -91,7 +91,7 @@ public abstract class MoneyMetric extends Metric<Money> {
       }
 
       @Override
-      protected Money getValue() {
+      public Money getValue() {
         return aggregate;
       }      
     };
@@ -109,7 +109,7 @@ public abstract class MoneyMetric extends Metric<Money> {
       }
 
       @Override
-      protected Money getValue() {
+      public Money getValue() {
         return aggregate;
       }      
     };

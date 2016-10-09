@@ -34,4 +34,14 @@ public final class TaskContext<T extends Actor<T>> {
   public <S> void updateMetric(Metric<S> metric, S value) {
     sim.update(metric, value);
   }
+
+  @SuppressWarnings("unchecked")
+  public <S> Metric<S> getMetric(String metricName) {
+    for (Metric<?> metric : sim.getMetrics()) {
+      if (metricName.equals(metric.getName())) {
+        return (Metric<S>) metric;
+      }      
+    }
+    return null;
+  }
 }
