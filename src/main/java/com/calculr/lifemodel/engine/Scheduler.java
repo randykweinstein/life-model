@@ -264,6 +264,10 @@ public class Scheduler {
             "Can not invoke the daily task while it is already running or completed (state = %s).", 
             state.name());
       }
+      if (immediateTasks != null) {
+        runTasks(immediateTasks);
+      }
+
       state = State.START_OF_DAY;
       runTasks(startOfDayTasks);
       state = State.WITHIN_DAY;

@@ -11,6 +11,7 @@ import com.calculr.lifemodel.finance.Money;
 public class TestBooks {
   
   static class TransactionActor extends Actor<TransactionActor> {
+    private final Random random = new Random();
     private final AssetAccount account;
     
     TransactionActor(Simulation simulation, AssetAccount account) {
@@ -20,7 +21,6 @@ public class TestBooks {
 
     @Override
     public void onRegister(LocalDate date) {
-      Random random = new Random();
       onSchedule()
           .startingToday()
           .runDaily()
@@ -36,10 +36,10 @@ public class TestBooks {
     new TransactionActor(simulator, savingsAccount);
     AssetAccount greatInvestmentAccount = sheet.createInterestAccount("investment", 0.10);
     greatInvestmentAccount
-        .deposit(Transaction.create(LocalDate.now(), "Inital investment", Money.dollars(1000)));
-    
+        .deposit(Transaction.create(LocalDate.now(), "Initial investment", Money.dollars(1000)));
+
     simulator.runUntil(LocalDate.now().plusYears(30));
-    System.out.println(savingsAccount.getBalance());
-    System.out.format("Total assets: %s", sheet.get(BalanceSheet.ALL_ASSETS).getBalance());
+    System.out.format("Total assets: %s\n\n", sheet.get(BalanceSheet.ALL_ASSETS).getBalance());
+    System.out.println(sheet.toString());
   }
 }

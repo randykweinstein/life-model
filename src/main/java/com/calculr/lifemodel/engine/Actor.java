@@ -41,7 +41,7 @@ public abstract class Actor<T extends Actor<T>> {
   }
 
   /**
-   * Schedules a {@link SimpleTask} to execute on the specified date.
+   * Schedules a {@link Task} to execute on the specified date.
    */
   public void schedule(LocalDate date, Task<T> task) {
     scheduleInternal(date, task, TimeOfDay.WITHIN_DAY);

@@ -8,7 +8,7 @@ import com.calculr.lifemodel.finance.Money;
 
 /**
  * An account is an asset or liability containing one or more
- * {@link Transaction} items in a {@link Ledger}.
+ * {@link Transaction} items in a {@link DailyLedger}.
  */
 public abstract class Account extends Actor<Account> {
   protected final Simulation sim;
