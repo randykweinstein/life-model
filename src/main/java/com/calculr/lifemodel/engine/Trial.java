@@ -1,7 +1,6 @@
 package com.calculr.lifemodel.engine;
 
 import java.time.LocalDate;
-import java.util.Collection;
 
 /**
  * A trial is a single invocation of the simulator.

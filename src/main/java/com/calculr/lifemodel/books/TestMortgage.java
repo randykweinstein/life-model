@@ -2,12 +2,9 @@ package com.calculr.lifemodel.books;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Collection;
 
 import com.calculr.lifemodel.engine.Experiment;
-import com.calculr.lifemodel.engine.Metric;
 import com.calculr.lifemodel.engine.Simulation;
-import com.calculr.lifemodel.engine.Simulator;
 import com.calculr.lifemodel.engine.Trial;
 import com.calculr.lifemodel.finance.Bill;
 import com.calculr.lifemodel.finance.Money;

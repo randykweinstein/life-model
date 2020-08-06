@@ -22,6 +22,6 @@ public class EventQueueTest {
     System.out.println(queue);
     Truth.assertThat(1L).isEqualTo(1L);
     Assert.assertEquals(1L, 1L);
-    //Assert.assertEquals(1L, 2L);
+    // Assert.assertEquals(1L, 2L);
   }
 }

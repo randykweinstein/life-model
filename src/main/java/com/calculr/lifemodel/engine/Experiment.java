@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 
 public class Experiment {
   private Collection<Trial> trials;
