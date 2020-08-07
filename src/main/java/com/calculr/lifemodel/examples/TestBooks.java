@@ -1,8 +1,11 @@
-package com.calculr.lifemodel.books;
+package com.calculr.lifemodel.examples;
 
 import java.time.LocalDate;
 import java.util.Random;
 
+import com.calculr.lifemodel.books.AssetAccount;
+import com.calculr.lifemodel.books.BalanceSheet;
+import com.calculr.lifemodel.books.Transaction;
 import com.calculr.lifemodel.engine.Actor;
 import com.calculr.lifemodel.engine.Simulation;
 import com.calculr.lifemodel.engine.Simulator;

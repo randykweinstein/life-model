@@ -2,13 +2,14 @@ package com.calculr.lifemodel.engine;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Month;
 
 /**
  * An interface defining the {@code LocalDate} when an event should be invoked. 
  */
 public interface Starting {
   /**
-   * Returns the starting date for the {@link RecurringEvent}. 
+   * Returns the starting date for a recurring event.
    */
   LocalDate start(LocalDate date);
 
@@ -19,6 +20,17 @@ public interface Starting {
 
   static Starting on(LocalDate startDate) {
     return d -> startDate;
+  }
+
+  static Starting onMonthDay(Month month, int dayOfMonth) {
+    return d -> {
+      if (d.getMonth().getValue() < month.getValue() ||
+          (d.getMonth().equals(month) && d.getDayOfMonth() <= dayOfMonth)) {
+        return LocalDate.of(d.getYear(), month, dayOfMonth);
+      } else {
+        return LocalDate.of(d.getYear() + 1, month, dayOfMonth);
+      }
+    };
   }
 
   static Starting inNDays(int days) {
@@ -33,7 +45,7 @@ public interface Starting {
     return dayOfMonth(1);
   }
   
-  static class DayOfMonth implements Starting {
+  class DayOfMonth implements Starting {
     private final int day;
     DayOfMonth(int day) {
       this.day = day;

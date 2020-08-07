@@ -71,7 +71,7 @@ public class Mortgage implements Payee {
   }
   
   /**
-   * Returns the {@link EquityAccount} combining both the asset and liability into one view.
+   * Returns a virtual {@link Account} combining both the asset and liability into one view.
    */
   public VirtualAccount getEquity() {
     return equity;
@@ -89,8 +89,11 @@ public class Mortgage implements Payee {
       Money salePrice) {
     return new MortgageBuilder(sim, sheet, payer, name, salePrice);
   }
-  
-  static class MortgageBuilder {
+
+  /**
+   * Builds a mortgage based on a set of parameters.
+   */
+  public static class MortgageBuilder {
     private final Simulation sim;
     private final BalanceSheet sheet;
     private final String name;

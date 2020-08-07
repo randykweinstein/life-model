@@ -12,6 +12,7 @@ public interface Repeating {
   Repeating BIWEEKLY = everyNWeeks(2);
   Repeating MONTHLY = everyNMonths(1);
   Repeating QUARTERLY = everyNMonths(3);
+  Repeating ANNUALLY = everyNYears(1);
 
   /**
    * Returns a new local date in the sequence given the current date. 
@@ -23,20 +24,17 @@ public interface Repeating {
    * every month on that day.
    * 
    * @param day the day ranges from 1 to 31
-   * @return
+   * @return a generator for defining the next date in a sequence
    */
   @Deprecated
   static Repeating dayOfMonth(final int day) {
-    return new Repeating() {
-      @Override
-      public LocalDate next(LocalDate date) {
-        if (date.getDayOfMonth() < day) {
-          return date.plusDays(day - date.getDayOfMonth());
-        } else if (date.getDayOfMonth() == day) {
-          return date.plusMonths(1);
-        } else {
-          return date.plusDays(day - date.getDayOfMonth()).plusMonths(1);
-        }
+    return date -> {
+      if (date.getDayOfMonth() < day) {
+        return date.plusDays(day - date.getDayOfMonth());
+      } else if (date.getDayOfMonth() == day) {
+        return date.plusMonths(1);
+      } else {
+        return date.plusDays(day - date.getDayOfMonth()).plusMonths(1);
       }
     };
   }
@@ -51,5 +49,9 @@ public interface Repeating {
 
   static Repeating everyNMonths(final int numMonths) {
     return d -> d.plusMonths(numMonths);
+  }
+
+  static Repeating everyNYears(final int numYears) {
+    return d -> d.plusYears(numYears);
   }
 }

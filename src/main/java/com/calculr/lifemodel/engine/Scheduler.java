@@ -33,7 +33,7 @@ public class Scheduler {
     START_OF_DAY,
     WITHIN_DAY,
     END_OF_DAY,
-    IMMEDIATELY;
+    IMMEDIATELY
   }
 
   /**
@@ -97,7 +97,7 @@ public class Scheduler {
      * The scheduler has completed. Note that tasks can be still be scheduled in
      * this state. The scheduler will complete the final day and then exit.
      */
-    COMPLETED;
+    COMPLETED
   }
   private State state = State.INIT;
   
@@ -162,14 +162,14 @@ public class Scheduler {
       
       /**
        * When the DailyTasks starts running, it is the START_OF_DAY tasks. Only
-       * {@link TimeOfDay.WITHIN_DAY} and {@link TimeOfDay.END_OF_DAY} tasks can
-       * be scheduled in this stae.
+       * {@link State#WITHIN_DAY} and {@link State#END_OF_DAY} tasks can
+       * be scheduled in this state.
        */
       START_OF_DAY,
       
       /**
        * The tasks in the middle of the day are running. Only tasks that are at
-       * the {@link TimeOfDay.END_OF_DAY} can be scheduled.
+       * the {@link State#END_OF_DAY} can be scheduled.
        */
       WITHIN_DAY,
       
@@ -182,7 +182,7 @@ public class Scheduler {
        * All tasks have been completed. This is now inactive and all references
        * to this can be removed.
        */
-      DAY_COMPLETED;
+      DAY_COMPLETED
     }
     private State state = State.INIT;
     
@@ -194,61 +194,43 @@ public class Scheduler {
     /**
      * Add a new {@link TaskEntry} to this set of daily executable tasks, at the
      * specified time of day.
-     * 
-     * @param entry
-     * @param timeOfDay
      */
     void add(TaskEntry<?> entry, Scheduler.TimeOfDay timeOfDay) {
       switch (timeOfDay) {
       case START_OF_DAY:
+        //noinspection SwitchStatementWithTooFewBranches
         switch (state) {
-        case INIT:        
-          startOfDayTasks.add(entry);
-          break;
-        default:
-          throw new SchedulerException(
+          case INIT -> startOfDayTasks.add(entry);
+          default -> throw new SchedulerException(
               "Can not add start of day tasks to an already running or completed day (state = %s).",
               state.name());
         }
         break;
       case WITHIN_DAY:
         switch (state) {
-        case INIT:
-        case START_OF_DAY:
-          dayTasks.add(entry);
-          break;
-        default:
-          throw new SchedulerException(
+          case INIT, START_OF_DAY -> dayTasks.add(entry);
+          default -> throw new SchedulerException(
               "Can not add within day tasks to an already running or completed day (state = %s).",
               state.name());
-        }                
+        }
         break;
       case END_OF_DAY:
         switch (state) {
-        case INIT:
-        case START_OF_DAY:
-        case WITHIN_DAY:
-          endOfDayTasks.addFirst(entry);
-          break;
-        default:
-          throw new SchedulerException(
+          case INIT, START_OF_DAY, WITHIN_DAY -> endOfDayTasks.addFirst(entry);
+          default -> throw new SchedulerException(
               "Can not add end of day tasks to an already running or completed day (state = %s).",
-              state.name());        
+              state.name());
         }
         break;
       case IMMEDIATELY:
         switch (state) {
-        case INIT:
-        case START_OF_DAY:
-        case WITHIN_DAY:
-        case END_OF_DAY:
-          if (immediateTasks == null) {
-            immediateTasks = new ConcurrentLinkedQueue<>();
+          case INIT, START_OF_DAY, WITHIN_DAY, END_OF_DAY -> {
+            if (immediateTasks == null) {
+              immediateTasks = new ConcurrentLinkedQueue<>();
+            }
+            immediateTasks.add(entry);
           }
-          immediateTasks.add(entry);
-          break;
-        default:
-          throw new SchedulerException(
+          default -> throw new SchedulerException(
               "Can not add immediate tasks to an already completed day (state = %s).",
               state.name());
         }
@@ -291,22 +273,17 @@ public class Scheduler {
     }
     
     TimeOfDay getCurrentTimeOfDay() {
-      switch (state) {
-      case INIT:
-      case START_OF_DAY:
-        return TimeOfDay.START_OF_DAY;
-      case WITHIN_DAY:
-        return TimeOfDay.WITHIN_DAY;
-      case END_OF_DAY:
-        return TimeOfDay.END_OF_DAY;
-      default:
-        throw new SchedulerException(
+      return switch (state) {
+        case INIT, START_OF_DAY -> TimeOfDay.START_OF_DAY;
+        case WITHIN_DAY -> TimeOfDay.WITHIN_DAY;
+        case END_OF_DAY -> TimeOfDay.END_OF_DAY;
+        default -> throw new SchedulerException(
             "There is no valid time of day since the daily tasks have completed");
-      }
+      };
     }
     
     private static <T extends Actor<T>> void runTask(LocalDate date, TaskEntry<T> entry) {
-      entry.task.run(new TaskContext<T>(entry.actor, entry.sim));
+      entry.task.run(new TaskContext<>(entry.actor, entry.sim));
     }
 
     @Override

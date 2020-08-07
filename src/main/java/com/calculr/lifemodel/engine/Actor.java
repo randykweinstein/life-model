@@ -2,6 +2,7 @@ package com.calculr.lifemodel.engine;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -11,7 +12,7 @@ import com.calculr.lifemodel.finance.SchedulerException;
 /**
  * An actor is an entity that can schedule tasks.
  * 
- * @param T the type of Actor
+ * @param <T> the type of Actor
  */
 public abstract class Actor<T extends Actor<T>> {
 
@@ -27,7 +28,7 @@ public abstract class Actor<T extends Actor<T>> {
      * The state is registered and enabled, and all tasks invoked by this state
      * will be executed.
      */
-    ENABLED;
+    ENABLED
   }
   private State state = State.REGISTERED;
   
@@ -37,7 +38,7 @@ public abstract class Actor<T extends Actor<T>> {
   protected Actor(Simulation simulation) {
     this.simulation = simulation;
     simulation.getScheduler().scheduleImmediately((T) this,
-        context -> ((Actor<T>) context.getActor()).onRegister(context.getDate()));
+        context -> context.getActor().onRegister(context.getDate()));
   }
 
   /**
@@ -51,15 +52,14 @@ public abstract class Actor<T extends Actor<T>> {
    * Schedules a {@link Task} to execute at the start of the specified date.
    */
   public void scheduleStartOfDay(LocalDate date, Task<T> task) {
-    scheduleInternal(date, context -> task.run(context),
-        TimeOfDay.START_OF_DAY);
+    scheduleInternal(date, task, TimeOfDay.START_OF_DAY);
   }
 
   /**
    * Schedules a {@link Task} to execute at the end of the specified date.
    */
   public void scheduleEndOfDay(LocalDate date, Task<T> task) {
-    scheduleInternal(date, context -> task.run(context), TimeOfDay.END_OF_DAY);
+    scheduleInternal(date, task, TimeOfDay.END_OF_DAY);
   }
 
   /**
@@ -83,6 +83,7 @@ public abstract class Actor<T extends Actor<T>> {
   private static class ScheduleSpec {
     private final LocalDate startingDate;
     private Starting starting = null;
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private Optional<Repeating> repeating = Optional.empty();
     private Completing completing = Completing.indefinitely();
     private Scheduler.TimeOfDay timeOfDay = Scheduler.TimeOfDay.WITHIN_DAY;
@@ -128,6 +129,11 @@ public abstract class Actor<T extends Actor<T>> {
       spec.starting = Starting.on(startDate);
       return new ScheduleRepeating(spec);
     }
+
+    public ScheduleRepeating starting(Month month, int dayOfMonth) {
+      spec.starting = Starting.onMonthDay(month, dayOfMonth);
+      return new ScheduleRepeating(spec);
+    }
   }
   
   public class ScheduleRepeating extends ScheduleTimeOfDay {
@@ -157,6 +163,11 @@ public abstract class Actor<T extends Actor<T>> {
     }
     public ScheduleCompletion runEveryNMonths(int numMonths) {
       spec.repeating = Optional.of(Repeating.everyNMonths(numMonths));
+      return new ScheduleCompletion(spec);
+    }
+
+    public ScheduleCompletion runAnnually() {
+      spec.repeating = Optional.of(Repeating.ANNUALLY);
       return new ScheduleCompletion(spec);
     }
   }
@@ -204,7 +215,7 @@ public abstract class Actor<T extends Actor<T>> {
     }
 
     public void schedule(Task<T> task) {   
-      scheduleInternal(spec.starting.start(spec.startingDate), new RepeatingTask<T>(task, spec),
+      scheduleInternal(spec.starting.start(spec.startingDate), new RepeatingTask<>(task, spec),
           spec.timeOfDay);
     }
     
@@ -227,7 +238,7 @@ public abstract class Actor<T extends Actor<T>> {
     public void run(TaskContext<T> context) {      
       // Run this iteration.
       task.run(context);
-      if (!spec.repeating.isPresent()) {
+      if (spec.repeating.isEmpty()) {
         return;
       }
       LocalDate date = context.getDate();

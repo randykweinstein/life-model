@@ -6,7 +6,15 @@ public class Money {
   private static final long EXTRA_PRECISION = 10000;
   
   private final long fractionalCents; 
-  
+
+  static Money fromPrimitive(long fractionalCents) {
+    return new Money(fractionalCents);
+  }
+
+  long toPrimitive() {
+    return fractionalCents;
+  }
+
   public static Money dollars(long dollars) {
     return new Money(dollars * 100 * EXTRA_PRECISION);
   }
@@ -20,7 +28,7 @@ public class Money {
   }
   
   public static Money dollars(double dollars) {
-    return new Money((long) Math.round(dollars * (100 * EXTRA_PRECISION)));
+    return new Money(Math.round(dollars * (100 * EXTRA_PRECISION)));
   }
   
   public static Money zero() {
@@ -32,7 +40,7 @@ public class Money {
   }
   
   public int fullDollars() {
-    return (int) Math.floor(fractionalCents / (100 * EXTRA_PRECISION));
+    return (int) Math.floor(1.0 * fractionalCents / (100 * EXTRA_PRECISION));
   }
   
   public int remainingCents() {
@@ -58,7 +66,7 @@ public class Money {
   }
 
   public Money scale(double factor) {
-    return new Money((long) Math.round(fractionalCents * factor));
+    return new Money(Math.round(fractionalCents * factor));
   }
 
   public Money add(Money amount) {
@@ -66,11 +74,11 @@ public class Money {
   }
   
   public Money plusPercent(float percent) {
-    return new Money((long) Math.round(fractionalCents * ((100 + percent) / 100)));
+    return new Money(Math.round(fractionalCents * ((100 + percent) / 100)));
   }
   
   public Money minusPercent(float percent) {
-    return new Money((long) Math.round(fractionalCents * ((100 - percent) / 100)));
+    return new Money(Math.round(fractionalCents * ((100 - percent) / 100)));
   }  
   
   public Money sub(Money amount) {

@@ -1,8 +1,9 @@
-package com.calculr.lifemodel.books;
+package com.calculr.lifemodel.examples;
 
 import java.time.Duration;
 import java.time.LocalDate;
 
+import com.calculr.lifemodel.books.*;
 import com.calculr.lifemodel.engine.Experiment;
 import com.calculr.lifemodel.engine.Simulation;
 import com.calculr.lifemodel.engine.Trial;
