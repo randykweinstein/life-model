@@ -3,7 +3,7 @@ package com.calculr.lifemodel.engine;
 /**
  * A task is a block of executable code that runs according to a specified schedule.
  * 
- * @param T the type of the {@link Actor}
+ * @param <T> the type of the {@link Actor}
  */
 public interface Task<T extends Actor<T>> {
   
